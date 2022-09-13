@@ -1,6 +1,7 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import '@nomiclabs/hardhat-waffle';
+import { HardhatUserConfig } from 'hardhat/config';
+import '@nomicfoundation/hardhat-toolbox';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomiclabs/hardhat-ethers';
 
 require("dotenv").config();
 

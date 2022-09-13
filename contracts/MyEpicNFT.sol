@@ -13,10 +13,13 @@ contract MyEpicNFT is ERC721URIStorage {
   // Magic given to us by OpenZeppelin to help us keep track of tokenIds.
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds;
+  // Add owner tracking to allow destroy command
+  address public owner;
 
   // We need to pass the name of our NFTs token and its symbol.
   //constructor() ERC721 ("SquareNFT", "SQUARE") {
   constructor() ERC721 ("Epic NFT", "EP!C") {
+    owner = msg.sender;
     console.log("This is my NFT contract. Epic!");
   }
 
@@ -31,7 +34,9 @@ contract MyEpicNFT is ERC721URIStorage {
     // Set the NFTs data.
     // _setTokenURI(newItemId, "blah");
     // _setTokenURI(newItemId, "https://api.npoint.io/86ce62f99d90f2d656b1"); // Spongebox Cowboy Pants
-    _setTokenURI(newItemId, "https://www.npoint.io/docs/20af4aabe6a0e92de44f"); // 3476604559_An_HD_photo_of_a_purple_sifaka.png / ipfs://QmPk5vPprBg436yxq1VCcU8LCCVNAzaysPwuxUJ3A28FYE
+    // NB: Edit on https://www.npoint.io/docs/20af4aabe6a0e92de44f // 3476604559_An_HD_photo_of_a_purple_sifaka.png / ipfs://QmPk5vPprBg436yxq1VCcU8LCCVNAzaysPwuxUJ3A28FYE
+    _setTokenURI(newItemId, "https://api.npoint.io/20af4aabe6a0e92de44f"); // 3476604559_An_HD_photo_of_a_purple_sifaka.png / ipfs://QmPk5vPprBg436yxq1VCcU8LCCVNAzaysPwuxUJ3A28FYE
+    
 
     // Log the activity
     console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
@@ -39,4 +44,10 @@ contract MyEpicNFT is ERC721URIStorage {
     // Increment the counter for when the next NFT is minted.
     _tokenIds.increment();
   }
+
+    // Include a self-destruct function
+    function destroySmartContract(address payable _to) public {
+        require(msg.sender == owner, "You are not the owner");
+        selfdestruct(_to);
+    }
 }
