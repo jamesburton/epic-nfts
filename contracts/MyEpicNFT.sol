@@ -18,10 +18,14 @@ contract MyEpicNFT is ERC721URIStorage {
   Counters.Counter private _tokenIds;
   // Add owner tracking to allow destroy command and/or owner-creation lock
   // address public owner;
+  uint256 public maxTokens;
 
-    // This is our SVG code. All we need to change is the word that's displayed. Everything else stays the same.
+  // This is our SVG code. All we need to change is the word that's displayed. Everything else stays the same.
   // So, we make a baseSvg variable here that all our NFTs can use.
-  string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
+  // string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
+  // We split the SVG at the part where it asks for the background color.
+  string svgPart1 = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='";
+  string svgPart2 = "'/><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
 
   // I create three arrays, each with their own theme of random words.
   // Pick some random funny words, names of anime characters, foods you like, whatever! 
@@ -29,7 +33,11 @@ contract MyEpicNFT is ERC721URIStorage {
   string[] secondWords = ["Dog", "Person", "Robot", "Computer", "Program", "Code", "Cat", "Dingo", "Lemur", "Postman", "Worker", "Hobbit", "Elf", "Mouse", "Dragon"];
   string[] thirdWords = ["Wrangler", "Leader", "Chief", "Underling", "Coordinator", "Usurper", "Destroyer", "Battler", "Regent", "Creator", "Nemesis", "Champion"];
 
+  // Get fancy with it! Declare a bunch of colors.
+  string[] colors = ["red", "#08C2A8", "black", "yellow", "blue", "green"];
+
   event NewEpicNFTMinted(address sender, uint256 tokenId);
+  event AllNFTsMinted();
 
   // I create a function to randomly pick a word from each array.
   function pickRandomFirstWord(uint256 tokenId) public view returns (string memory) {
@@ -50,9 +58,16 @@ contract MyEpicNFT is ERC721URIStorage {
 
   function pickRandomThirdWord(uint256 tokenId) public view returns (string memory) {
     // uint256 rand = random(string(abi.encodePacked("THIRD_WORD", Strings.toString(tokenId))));
-    uint256 rand = random(string(abi.encodePacked("THIRD_WORD", msg.sender, Strings.toString(tokenId))));
+    uint256 rand = random(string(abi.encodePacked("3", msg.sender, Strings.toString(tokenId))));
     rand = rand % thirdWords.length;
     return thirdWords[rand];
+  }
+
+  function randomColor(uint256 tokenId) public view returns (string memory) {
+    // uint256 rand = random(string(abi.encodePacked("THIRD_WORD", Strings.toString(tokenId))));
+    uint256 rand = random(string(abi.encodePacked("C", msg.sender, Strings.toString(tokenId))));
+    rand = rand % colors.length;
+    return colors[rand];
   }
 
   function random(string memory input) internal pure returns (uint256) {
@@ -60,11 +75,14 @@ contract MyEpicNFT is ERC721URIStorage {
   }
 
   // We need to pass the name of our NFTs token and its symbol.
-  constructor() ERC721 ("SquareNFT", "SQUARE") {
+  //constructor() ERC721 ("SquareNFT", "SQUARE") {
+  constructor(string memory name, string memory token, uint256 tokenLimit) ERC721 (name, token) {
   //constructor() ERC721 ("Epic NFT", "EP!C") {
     // owner = msg.sender;
     //console.log("This is my NFT contract. Epic!");
-    console.log("This is my NFT contract. Woah!");
+    // console.log("This is my NFT contract. Woah!");
+    maxTokens = tokenLimit;
+    console.log("Created new NFT contract with max tokens: ", maxTokens);
   }
 
   // A function our user will hit to get their NFT.
@@ -75,17 +93,18 @@ contract MyEpicNFT is ERC721URIStorage {
     // * Get the current tokenId, this starts at 0.
     uint256 newItemId = _tokenIds.current();
 
+    // * Refuse to mint if maximum has been reached
+    require(newItemId < maxTokens, 'Maximum tokens have been minted aleady');
+
     // * We go and randomly grab one word from each of the three arrays.
     string memory first = pickRandomFirstWord(newItemId);
     string memory second = pickRandomSecondWord(newItemId);
     string memory third = pickRandomThirdWord(newItemId);
+    string memory color = randomColor(newItemId);
 
     // * Generating SVG from words
-    // ** I concatenate it all together, and then close the <text> and <svg> tags.
-    // string memory finalSvg = string(abi.encodePacked(baseSvg, first, second, third, "</text></svg>"));
-    // string memory combinedWord = string(abi.encodePackged(first,second,third));
     string memory combinedWord = string(abi.encodePacked(first,'-',second,'-',third));
-    string memory finalSvg = string(abi.encodePacked(baseSvg, combinedWord, "</text></svg>"));
+    string memory finalSvg = string(abi.encodePacked(svgPart1, color, svgPart2, combinedWord, "</text></svg>"));
     console.log("\n--------------------", finalSvg,"--------------------\n");
     // Get all the JSON metadata in place and base64 encode it.
     string memory json = Base64.encode(
@@ -95,7 +114,7 @@ contract MyEpicNFT is ERC721URIStorage {
                     '{"name": "',
                     // We set the title of our NFT as the generated word.
                     combinedWord,
-                    '", "description": "A highly acclaimed collection of squares.", "image": "data:image/svg+xml;base64,',
+                    '", "description": "A highly acclaimed colored collection of squares.", "image": "data:image/svg+xml;base64,',
                     // We add data:image/svg+xml;base64 and then append our base64 encode our svg.
                     Base64.encode(bytes(finalSvg)),
                     '"}'
@@ -135,6 +154,10 @@ contract MyEpicNFT is ERC721URIStorage {
     // Increment the counter for when the next NFT is minted.
     _tokenIds.increment();
 
+    // If maximum has been reach, emit AllNFTsMinted event
+    if(_tokenIds.current() == maxTokens)
+        emit AllNFTsMinted();
+
     emit NewEpicNFTMinted(msg.sender, newItemId);
   }
 
@@ -143,4 +166,7 @@ contract MyEpicNFT is ERC721URIStorage {
     //     require(msg.sender == owner, "You are not the owner");
     //     selfdestruct(_to);
     // }
+    function getMintedCount() public view returns (uint256) {
+        return _tokenIds.current();
+    }
 }

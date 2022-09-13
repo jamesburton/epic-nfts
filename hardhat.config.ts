@@ -2,6 +2,7 @@ import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
 import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 
 require("dotenv").config();
 
@@ -32,6 +33,9 @@ const config: HardhatUserConfig = {
     },
     // aurora: {},
     // [aurora-test]: {},
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_KEY,
   },
 };
 
