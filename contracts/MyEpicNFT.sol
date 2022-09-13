@@ -29,6 +29,8 @@ contract MyEpicNFT is ERC721URIStorage {
   string[] secondWords = ["Dog", "Person", "Robot", "Computer", "Program", "Code", "Cat", "Dingo", "Lemur", "Postman", "Worker", "Hobbit", "Elf", "Mouse", "Dragon"];
   string[] thirdWords = ["Wrangler", "Leader", "Chief", "Underling", "Coordinator", "Usurper", "Destroyer", "Battler", "Regent", "Creator", "Nemesis", "Champion"];
 
+  event NewEpicNFTMinted(address sender, uint256 tokenId);
+
   // I create a function to randomly pick a word from each array.
   function pickRandomFirstWord(uint256 tokenId) public view returns (string memory) {
     // I seed the random generator. More on this in the lesson. 
@@ -132,6 +134,8 @@ contract MyEpicNFT is ERC721URIStorage {
 
     // Increment the counter for when the next NFT is minted.
     _tokenIds.increment();
+
+    emit NewEpicNFTMinted(msg.sender, newItemId);
   }
 
     // // Include a self-destruct function
